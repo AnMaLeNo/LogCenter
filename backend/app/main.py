@@ -1,7 +1,10 @@
-from fastapi import FastAPI, HTTPException, Query, status
+from typing import Annotated
+
+from fastapi import Depends, FastAPI, HTTPException, Query, status
+from opensearchpy import OpenSearch
 from opensearchpy.exceptions import OpenSearchException
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.models import LogCreate, LogLevel, LogRead
 from app.opensearch_client import (
     LOG_INDEX_PATTERN,
@@ -11,12 +14,16 @@ from app.opensearch_client import (
 )
 
 
+ClientDep = Annotated[OpenSearch, Depends(get_opensearch_client)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
+SearchTextQuery = Annotated[str | None, Query(min_length=1)]
+ServiceQuery = Annotated[str | None, Query(min_length=1)]
+
 app = FastAPI(title="LogCenter API")
 
 
 @app.post("/logs", response_model=LogRead, status_code=status.HTTP_201_CREATED)
-def create_log(log: LogCreate) -> LogRead:
-    client = get_opensearch_client()
+def create_log(log: LogCreate, client: ClientDep) -> LogRead:
     index_name = build_log_index_name(log.timestamp)
     document = log.to_opensearch_document()
 
@@ -34,12 +41,12 @@ def create_log(log: LogCreate) -> LogRead:
 
 @app.get("/logs/search", response_model=list[LogRead])
 def search_logs(
-    q: str | None = Query(default=None, min_length=1),
+    client: ClientDep,
+    settings: SettingsDep,
+    q: SearchTextQuery = None,
     level: LogLevel | None = None,
-    service: str | None = Query(default=None, min_length=1),
+    service: ServiceQuery = None,
 ) -> list[LogRead]:
-    client = get_opensearch_client()
-    settings = get_settings()
     query = _build_search_query(q=q, level=level, service=service)
 
     body = {
