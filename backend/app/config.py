@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import lru_cache
 import os
 
 
@@ -23,6 +24,7 @@ def _get_positive_int_env(name: str, default: int) -> int:
     return value
 
 
+@lru_cache
 def get_settings() -> Settings:
     return Settings(
         opensearch_host=os.getenv("OPENSEARCH_HOST", "localhost"),
