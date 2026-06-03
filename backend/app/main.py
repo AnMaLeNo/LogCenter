@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
 from opensearchpy import OpenSearch
 from opensearchpy.exceptions import OpenSearchException
 
@@ -17,8 +18,17 @@ from app.opensearch_client import (
 ClientDep = Annotated[OpenSearch, Depends(get_opensearch_client)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 NonEmptyQueryString = Annotated[str | None, Query(min_length=1)]
+LevelQuery = Annotated[list[LogLevel] | None, Query()]
 
 app = FastAPI(title="LogCenter API")
+settings = get_settings()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=list(settings.cors_origins),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/logs", response_model=LogRead, status_code=status.HTTP_201_CREATED)
@@ -43,7 +53,7 @@ def search_logs(
     client: ClientDep,
     settings: SettingsDep,
     q: NonEmptyQueryString = None,
-    level: LogLevel | None = None,
+    level: LevelQuery = None,
     service: NonEmptyQueryString = None,
 ) -> list[LogRead]:
     query = _build_search_query(q=q, level=level, service=service)
@@ -75,7 +85,7 @@ def search_logs(
 
 def _build_search_query(
     q: str | None,
-    level: LogLevel | None,
+    level: list[LogLevel] | None,
     service: str | None,
 ) -> dict:
     must = []
@@ -84,8 +94,8 @@ def _build_search_query(
     if q is not None:
         must.append({"match": {"message": q}})
 
-    if level is not None:
-        filters.append({"term": {"level": level.value}})
+    if level:
+        filters.append({"terms": {"level": [item.value for item in level]}})
 
     if service is not None:
         filters.append({"term": {"service": service}})

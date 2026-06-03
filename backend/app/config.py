@@ -8,6 +8,7 @@ class Settings:
     opensearch_host: str
     opensearch_port: int
     search_results_limit: int
+    cors_origins: tuple[str, ...]
 
 
 def _get_positive_int_env(name: str, default: int) -> int:
@@ -30,4 +31,9 @@ def get_settings() -> Settings:
         opensearch_host=os.getenv("OPENSEARCH_HOST", "localhost"),
         opensearch_port=_get_positive_int_env("OPENSEARCH_PORT", 9200),
         search_results_limit=_get_positive_int_env("SEARCH_RESULTS_LIMIT", 100),
+        cors_origins=tuple(
+            origin.strip()
+            for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+            if origin.strip()
+        ),
     )
