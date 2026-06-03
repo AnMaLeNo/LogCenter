@@ -1,4 +1,15 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: logcenter-frontend
+    env_file:
+      - .env
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      - backend
+
   backend:
     build:
       context: ./backend
@@ -6,7 +17,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT:-8420}:8000"
     depends_on:
       - opensearch-node
 
