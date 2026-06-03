@@ -16,8 +16,7 @@ from app.opensearch_client import (
 
 ClientDep = Annotated[OpenSearch, Depends(get_opensearch_client)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
-SearchTextQuery = Annotated[str | None, Query(min_length=1)]
-ServiceQuery = Annotated[str | None, Query(min_length=1)]
+NonEmptyQueryString = Annotated[str | None, Query(min_length=1)]
 
 app = FastAPI(title="LogCenter API")
 
@@ -43,9 +42,9 @@ def create_log(log: LogCreate, client: ClientDep) -> LogRead:
 def search_logs(
     client: ClientDep,
     settings: SettingsDep,
-    q: SearchTextQuery = None,
+    q: NonEmptyQueryString = None,
     level: LogLevel | None = None,
-    service: ServiceQuery = None,
+    service: NonEmptyQueryString = None,
 ) -> list[LogRead]:
     query = _build_search_query(q=q, level=level, service=service)
 
