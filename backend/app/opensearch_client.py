@@ -20,7 +20,7 @@ LOG_INDEX_BODY = {
         "properties": {
             "timestamp": {
                 "type": "date",
-                "format": "strict_date_optional_time||epoch_millis",
+                "format": "strict_date_optional_time",
             },
             "level": {"type": "keyword"},
             "message": {"type": "text"},
