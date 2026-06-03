@@ -29,7 +29,7 @@ def create_log(log: LogCreate, client: ClientDep) -> LogRead:
 
     try:
         ensure_log_index(client, index_name)
-        result = client.index(index=index_name, body=document, refresh="wait_for")
+        result = client.index(index=index_name, body=document, refresh=False)
     except OpenSearchException as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
