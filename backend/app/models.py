@@ -32,3 +32,9 @@ class LogRead(BaseModel):
     level: LogLevel
     message: str
     service: str
+
+
+class SubscriptionFilters(BaseModel):
+    q: str | None = Field(default=None, min_length=1)
+    level: list[LogLevel] | None = None
+    service: str | None = Field(default=None, min_length=1)
