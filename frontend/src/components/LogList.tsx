@@ -1,5 +1,3 @@
-import { RefreshCw } from 'lucide-react'
-
 import type { LogEntry } from '../api'
 import { formatTimestamp, LEVEL_STYLES } from '../lib/logs'
 
@@ -7,14 +5,12 @@ type LogListProps = {
   logs: LogEntry[]
   loading: boolean
   resultCountLabel: string
-  onRefresh: () => void
 }
 
 export function LogList({
   logs,
   loading,
   resultCountLabel,
-  onRefresh,
 }: LogListProps) {
   return (
     <section className="min-h-[560px] overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
@@ -22,19 +18,6 @@ export function LogList({
         <div className="text-sm text-zinc-600">
           <span>{resultCountLabel}</span>
         </div>
-        <button
-          type="button"
-          className="inline-flex h-9 items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
-          onClick={onRefresh}
-          disabled={loading}
-          title="Rafraichir"
-        >
-          <RefreshCw
-            className={`size-4 ${loading ? 'animate-spin' : ''}`}
-            aria-hidden="true"
-          />
-          Rafraichir
-        </button>
       </div>
 
       {logs.length === 0 && !loading ? (
