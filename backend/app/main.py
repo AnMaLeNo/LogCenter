@@ -113,8 +113,13 @@ def search_logs(
 
 
 @app.websocket("/ws/logs")
-async def logs_stream(websocket: WebSocket, client: ClientDep) -> None:
+async def logs_stream(
+    websocket: WebSocket, client: ClientDep, settings: SettingsDep
+) -> None:
     await websocket.accept()
+    await websocket.send_json(
+        {"type": "config", "limit": settings.search_results_limit}
+    )
     client_id = uuid.uuid4().hex
     await manager.add(client_id, websocket)
 
