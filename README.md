@@ -24,7 +24,7 @@ Le serveur de dev Vite est servi sur http://localhost:5173.
 Génère un flux de logs en continu vers `POST /logs`, utile pour voir le temps réel.
 
 ```bash
-SIMULATOR_RATE=5 docker compose -f docker-compose.yml -f docker-compose.simulator.yml up --build simulator
+SIMULATOR_RATE=5 docker compose -f docker-compose.yml -f docker-compose.simulator.yml up --build
 ```
 
 `SIMULATOR_RATE` règle le nombre de logs par seconde (défaut : 1).
