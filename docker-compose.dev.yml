@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    image: logcenter-frontend-dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # !override replaces the base prod port mapping instead of merging with it
+    ports: !override
+      - "${FRONTEND_DEV_PORT:-5173}:5173"
+    environment:
+      - BACKEND_ORIGIN=http://backend:8000
+    restart: "no"
