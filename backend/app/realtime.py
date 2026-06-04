@@ -31,6 +31,7 @@ def ensure_percolator_index(client: OpenSearch) -> None:
     try:
         client.indices.create(index=PERCOLATOR_INDEX, body=PERCOLATOR_INDEX_BODY)
     except OpenSearchException:
+        # Another request may have created it first.
         if not client.indices.exists(index=PERCOLATOR_INDEX):
             raise
 

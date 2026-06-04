@@ -65,6 +65,7 @@ async def create_log(log: LogCreate, client: ClientDep) -> LogRead:
 
     try:
         ensure_log_index(client, index_name)
+        # refresh=False keeps ingestion fast; the live broadcast covers immediate visibility.
         result = client.index(index=index_name, body=document, refresh=False)
     except OpenSearchException as exc:
         raise HTTPException(
@@ -155,6 +156,7 @@ async def _broadcast_log(client: OpenSearch, log: LogRead) -> None:
     try:
         subscribers = matching_subscribers(client, document)
     except OpenSearchException:
+        # Real-time is a bonus: never let a broadcast failure break log creation.
         return
 
     payload = log.model_dump(mode="json")

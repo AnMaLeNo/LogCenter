@@ -30,6 +30,7 @@ LOG_INDEX_BODY = {
 }
 
 
+# Index by the log's own date, not the server's, so replayed logs land in the right daily index.
 def build_log_index_name(timestamp: datetime) -> str:
     return f"logs-{timestamp:%Y.%m.%d}"
 
