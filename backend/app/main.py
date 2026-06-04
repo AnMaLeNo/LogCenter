@@ -113,9 +113,8 @@ def search_logs(
 
 
 @app.websocket("/ws/logs")
-async def logs_stream(websocket: WebSocket) -> None:
+async def logs_stream(websocket: WebSocket, client: ClientDep) -> None:
     await websocket.accept()
-    client = get_opensearch_client()
     client_id = uuid.uuid4().hex
     await manager.add(client_id, websocket)
 
