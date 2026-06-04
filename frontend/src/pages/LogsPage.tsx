@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   createLog,
@@ -16,7 +16,7 @@ import { NewLogForm } from '../components/NewLogForm'
 import { useLogStream } from '../hooks/useLogStream'
 import { INITIAL_FILTERS, LEVELS } from '../lib/logs'
 
-const MAX_LOGS = 100
+const DEFAULT_LIMIT = 20
 
 export function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([])
@@ -27,13 +27,20 @@ export function LogsPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
 
+  // Cap the live list at the size returned on load so the count stays stable.
+  const limitRef = useRef(DEFAULT_LIMIT)
+
   const fetchLogs = useCallback(
     async (signal?: AbortSignal) => {
       setLoading(true)
       setError(null)
 
       try {
-        setLogs(await searchLogs(filters, signal))
+        const results = await searchLogs(filters, signal)
+        if (results.length > 0) {
+          limitRef.current = results.length
+        }
+        setLogs(results)
       } catch (searchError) {
         if (signal?.aborted) {
           return
@@ -63,7 +70,7 @@ export function LogsPage() {
       if (current.some((item) => item.id === log.id)) {
         return current
       }
-      return [log, ...current].slice(0, MAX_LOGS)
+      return [log, ...current].slice(0, limitRef.current)
     })
   }, [])
 
