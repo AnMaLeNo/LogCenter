@@ -27,34 +27,36 @@ export function LogsPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
 
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadLogs() {
+  const fetchLogs = useCallback(
+    async (signal?: AbortSignal) => {
       setLoading(true)
       setError(null)
 
       try {
-        setLogs(await searchLogs(filters, controller.signal))
+        setLogs(await searchLogs(filters, signal))
       } catch (searchError) {
-        if (controller.signal.aborted) {
+        if (signal?.aborted) {
           return
         }
 
         setError(getApiErrorMessage(searchError))
       } finally {
-        if (!controller.signal.aborted) {
+        if (!signal?.aborted) {
           setLoading(false)
         }
       }
-    }
+    },
+    [filters],
+  )
 
-    void loadLogs()
+  useEffect(() => {
+    const controller = new AbortController()
+    void fetchLogs(controller.signal)
 
     return () => {
       controller.abort()
     }
-  }, [filters])
+  }, [fetchLogs])
 
   const handleLiveLog = useCallback((log: LogEntry) => {
     setLogs((current) => {
@@ -65,7 +67,12 @@ export function LogsPage() {
     })
   }, [])
 
-  useLogStream({ filters, onLog: handleLiveLog })
+  // On reconnection, logs may have been missed while offline: resync from REST.
+  const handleReconnect = useCallback(() => {
+    void fetchLogs()
+  }, [fetchLogs])
+
+  useLogStream({ filters, onLog: handleLiveLog, onReconnect: handleReconnect })
 
   const resultCountLabel = useMemo(() => {
     if (loading) {
@@ -91,19 +98,6 @@ export function LogsPage() {
     }))
   }
 
-  async function refreshLogs() {
-    setLoading(true)
-    setError(null)
-
-    try {
-      setLogs(await searchLogs(filters))
-    } catch (refreshError) {
-      setError(getApiErrorMessage(refreshError))
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function submitLog(payload: NewLogPayload) {
     setSubmitting(true)
     setSubmitError(null)
@@ -112,7 +106,6 @@ export function LogsPage() {
     try {
       await createLog(payload)
       setSubmitSuccess('Log ajoute')
-      await refreshLogs()
     } catch (submitError) {
       setSubmitError(getApiErrorMessage(submitError))
       throw submitError
@@ -153,7 +146,6 @@ export function LogsPage() {
               logs={logs}
               loading={loading}
               resultCountLabel={resultCountLabel}
-              onRefresh={refreshLogs}
             />
           </div>
         </section>
