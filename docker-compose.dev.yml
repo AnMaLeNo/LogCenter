@@ -1,0 +1,33 @@
+# Development override for LogCenter.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# This runs the frontend via the Vite dev server (hot module reload) instead of
+# the production nginx static build, with the source bind-mounted so edits
+# reload instantly. The base docker-compose.yml stays production-by-default.
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      # Use the dev stage (Vite dev server + HMR) instead of the default
+      # production runtime (nginx static).
+      target: development
+    # Distinct image tag so dev and prod builds don't overwrite each other's
+    # cached image (same name would force a rebuild on every mode switch).
+    image: logcenter-frontend-dev
+    # Bind-mount source for hot reload; keep container node_modules isolated
+    # so the host folder doesn't shadow the installed deps.
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # Dev server listens on 5173 (not nginx :80). Use !override so this ports
+    # list REPLACES the base prod mapping (host->80) instead of merging with it.
+    ports: !override
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      # Tell the Vite proxy where the backend lives (compose service name).
+      - BACKEND_ORIGIN=http://backend:8000
+    # The dev server doesn't need the prod restart policy.
+    restart: "no"
