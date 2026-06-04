@@ -1,0 +1,35 @@
+# Server-specific Traefik wiring for this host. NOT part of the portable app:
+# the base docker-compose.yml stays clean and reverse-proxy-agnostic so anyone
+# can clone and run the project without Traefik. Docker Compose automatically
+# merges this file on top of docker-compose.yml when present.
+#
+# This file is gitignored by default (deployment detail). Commit a sanitized
+# copy as docker-compose.override.yml.example if you want to share the pattern.
+
+services:
+  frontend:
+    # Join the shared edge network so Traefik can reach this container.
+    networks:
+      - default
+      - traefik-net
+    # No host port needed: Traefik handles ingress. Override the base mapping
+    # by not publishing (compose can't "unpublish", so we keep it harmless on a
+    # high local port; remove the base ports entry if you want zero host exposure).
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+      # Route https://logcenter.antoine42.com -> this frontend (serves SPA + /api).
+      - "traefik.http.routers.logcenter.rule=Host(`logcenter.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.logcenter.entrypoints=websecure"
+      - "traefik.http.routers.logcenter.tls.certresolver=cf"
+      - "traefik.http.services.logcenter.loadbalancer.server.port=80"
+
+  backend:
+    # Backend stays internal: reached only through the frontend's nginx /api
+    # proxy, never exposed directly by Traefik.
+    networks:
+      - default
+
+networks:
+  traefik-net:
+    external: true
