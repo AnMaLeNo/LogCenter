@@ -5,7 +5,6 @@ services:
     container_name: logcenter-simulator
     restart: "no"
     environment:
-      - TARGET_URL=http://backend:8000/logs
       - RATE=${SIMULATOR_RATE:-1}
     depends_on:
       - backend
