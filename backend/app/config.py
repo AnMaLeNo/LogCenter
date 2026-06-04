@@ -30,7 +30,7 @@ def get_settings() -> Settings:
     return Settings(
         opensearch_host=os.getenv("OPENSEARCH_HOST", "localhost"),
         opensearch_port=_get_positive_int_env("OPENSEARCH_PORT", 9200),
-        search_results_limit=_get_positive_int_env("SEARCH_RESULTS_LIMIT", 100),
+        search_results_limit=_get_positive_int_env("SEARCH_RESULTS_LIMIT", 20),
         cors_origins=tuple(
             origin.strip()
             for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
