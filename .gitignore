@@ -34,3 +34,6 @@ docker-compose.override.yml
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Personal notes (not for the repo)
+*.local.md
