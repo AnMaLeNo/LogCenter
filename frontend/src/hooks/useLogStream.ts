@@ -5,6 +5,7 @@ import { logStreamUrl, type LogEntry, type SearchFilters } from '../api'
 type UseLogStreamOptions = {
   filters: SearchFilters
   onLog: (log: LogEntry) => void
+  onConfig?: (limit: number) => void
   onReconnect?: () => void
 }
 
@@ -16,9 +17,12 @@ function toSubscription(filters: SearchFilters) {
   }
 }
 
-export function useLogStream({ filters, onLog, onReconnect }: UseLogStreamOptions) {
+export function useLogStream({ filters, onLog, onConfig, onReconnect }: UseLogStreamOptions) {
   const onLogRef = useRef(onLog)
   onLogRef.current = onLog
+
+  const onConfigRef = useRef(onConfig)
+  onConfigRef.current = onConfig
 
   const onReconnectRef = useRef(onReconnect)
   onReconnectRef.current = onReconnect
@@ -57,7 +61,12 @@ export function useLogStream({ filters, onLog, onReconnect }: UseLogStreamOption
 
       socket.onmessage = (event) => {
         try {
-          onLogRef.current(JSON.parse(event.data) as LogEntry)
+          const data = JSON.parse(event.data)
+          if (data?.type === 'config') {
+            onConfigRef.current?.(data.limit)
+            return
+          }
+          onLogRef.current(data as LogEntry)
         } catch {
           // Ignore malformed frames rather than crashing the stream.
         }

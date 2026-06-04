@@ -27,7 +27,9 @@ export function LogsPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
 
-  // Cap the live list at the size returned on load so the count stays stable.
+  // Cap the live list at the limit advertised by the backend over the socket.
+  // DEFAULT_LIMIT is only a fallback for the first frames: the WebSocket sends
+  // the real limit on connect, which replaces this value right away.
   const limitRef = useRef(DEFAULT_LIMIT)
 
   const fetchLogs = useCallback(
@@ -36,11 +38,7 @@ export function LogsPage() {
       setError(null)
 
       try {
-        const results = await searchLogs(filters, signal)
-        if (results.length > 0) {
-          limitRef.current = results.length
-        }
-        setLogs(results)
+        setLogs(await searchLogs(filters, signal))
       } catch (searchError) {
         if (signal?.aborted) {
           return
@@ -74,12 +72,18 @@ export function LogsPage() {
     })
   }, [])
 
+  const handleConfig = useCallback((limit: number) => {
+    if (limit > 0) {
+      limitRef.current = limit
+    }
+  }, [])
+
   // On reconnection, logs may have been missed while offline: resync from REST.
   const handleReconnect = useCallback(() => {
     void fetchLogs()
   }, [fetchLogs])
 
-  useLogStream({ filters, onLog: handleLiveLog, onReconnect: handleReconnect })
+  useLogStream({ filters, onLog: handleLiveLog, onConfig: handleConfig, onReconnect: handleReconnect })
 
   const resultCountLabel = useMemo(() => {
     if (loading) {
