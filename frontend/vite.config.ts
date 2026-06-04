@@ -11,6 +11,7 @@ export default defineConfig({
       '/api': {
         target: process.env.BACKEND_ORIGIN ?? 'http://localhost:8420',
         changeOrigin: true,
+        ws: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },

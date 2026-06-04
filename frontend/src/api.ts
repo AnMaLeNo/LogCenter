@@ -30,6 +30,13 @@ const client = axios.create({
   baseURL: API_BASE_URL,
 })
 
+export function logStreamUrl(): string {
+  const base = new URL(API_BASE_URL, window.location.origin)
+  base.protocol = base.protocol === 'https:' ? 'wss:' : 'ws:'
+  base.pathname = `${base.pathname.replace(/\/$/, '')}/ws/logs`
+  return base.toString()
+}
+
 export async function searchLogs(
   filters: SearchFilters,
   signal?: AbortSignal,

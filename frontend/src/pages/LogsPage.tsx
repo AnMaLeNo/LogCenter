@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   createLog,
@@ -13,7 +13,10 @@ import { AlertMessage } from '../components/AlertMessage'
 import { LogFilters } from '../components/LogFilters'
 import { LogList } from '../components/LogList'
 import { NewLogForm } from '../components/NewLogForm'
+import { useLogStream } from '../hooks/useLogStream'
 import { INITIAL_FILTERS, LEVELS } from '../lib/logs'
+
+const MAX_LOGS = 100
 
 export function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([])
@@ -52,6 +55,17 @@ export function LogsPage() {
       controller.abort()
     }
   }, [filters])
+
+  const handleLiveLog = useCallback((log: LogEntry) => {
+    setLogs((current) => {
+      if (current.some((item) => item.id === log.id)) {
+        return current
+      }
+      return [log, ...current].slice(0, MAX_LOGS)
+    })
+  }, [])
+
+  useLogStream({ filters, onLog: handleLiveLog })
 
   const resultCountLabel = useMemo(() => {
     if (loading) {
