@@ -6,6 +6,9 @@ from opensearchpy.exceptions import OpenSearchException
 
 PERCOLATOR_INDEX = "log-subscriptions"
 
+# Cap aligned with OpenSearch's default max_result_window.
+MAX_SUBSCRIBERS = 10_000
+
 PERCOLATOR_INDEX_BODY = {
     "mappings": {
         "properties": {
@@ -54,7 +57,7 @@ def matching_subscribers(client: OpenSearch, document: dict) -> list[str]:
             "percolate": {"field": "query", "document": document},
         },
         "_source": False,
-        "size": 10_000,
+        "size": MAX_SUBSCRIBERS,
     }
     result = client.search(index=PERCOLATOR_INDEX, body=body)
     return [hit["_id"] for hit in result["hits"]["hits"]]
