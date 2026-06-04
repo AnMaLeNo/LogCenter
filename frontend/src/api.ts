@@ -23,9 +23,12 @@ export type NewLogPayload = {
   service: string
 }
 
+// Default to a relative `/api` path so the app stays deployment-agnostic:
+// the same build works behind any host/reverse proxy without hardcoding a
+// server URL. Override with VITE_API_BASE_URL only for special setups
+// (e.g. pointing the dev frontend at a backend on a different origin).
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
-  'http://localhost:8420'
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '/api'
 
 const client = axios.create({
   baseURL: API_BASE_URL,
