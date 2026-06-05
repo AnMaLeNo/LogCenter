@@ -15,12 +15,14 @@ export const INITIAL_FILTERS: SearchFilters = {
   service: '',
 }
 
+// datetime-local expects a local "YYYY-MM-DDTHH:mm" value, so shift off the UTC offset first.
 export function toDateTimeLocalValue(date = new Date()) {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
 
   return localDate.toISOString().slice(0, 16)
 }
 
+// datetime-local has no timezone, so attach the local offset to produce a valid ISO 8601 string.
 export function toIsoWithLocalOffset(value: string) {
   const date = new Date(value)
   const offset = -date.getTimezoneOffset()
