@@ -14,7 +14,7 @@ import { LogFilters } from '../components/LogFilters'
 import { LogList } from '../components/LogList'
 import { NewLogForm } from '../components/NewLogForm'
 import { useLogStream } from '../hooks/useLogStream'
-import { INITIAL_FILTERS, LEVELS } from '../lib/logs'
+import { INITIAL_FILTERS } from '../lib/logs'
 
 const DEFAULT_LIMIT = 20
 
@@ -104,7 +104,7 @@ export function LogsPage() {
     setFilters((current) => ({
       ...current,
       levels: checked
-        ? LEVELS.filter((item) => item === level || current.levels.includes(item))
+        ? [...current.levels, level]
         : current.levels.filter((item) => item !== level),
     }))
   }
