@@ -83,7 +83,12 @@ export function LogsPage() {
     void fetchLogs()
   }, [fetchLogs])
 
-  useLogStream({ filters, onLog: handleLiveLog, onConfig: handleConfig, onReconnect: handleReconnect })
+  const { connected, everConnected } = useLogStream({
+    filters,
+    onLog: handleLiveLog,
+    onConfig: handleConfig,
+    onReconnect: handleReconnect,
+  })
 
   const resultCountLabel = useMemo(() => {
     if (loading) {
@@ -152,6 +157,9 @@ export function LogsPage() {
             </section>
           </aside>
           <div className="flex min-w-0 flex-col gap-4">
+            {everConnected && !connected && (
+              <AlertMessage>Connexion temps réel perdue, reconnexion…</AlertMessage>
+            )}
             {error && <AlertMessage>{error}</AlertMessage>}
             <LogList
               logs={logs}
