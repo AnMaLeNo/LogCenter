@@ -59,6 +59,7 @@ def ensure_log_index(client: OpenSearch, index_name: str) -> None:
     try:
         client.indices.create(index=index_name, body=LOG_INDEX_BODY)
     except RequestError as exc:
+        # Another request may have created it first.
         if exc.error == "resource_already_exists_exception":
             return
         raise
