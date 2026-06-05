@@ -88,9 +88,28 @@ export function useLogStream({ filters, onLog, onConfig, onReconnect }: UseLogSt
 
     connect()
 
+    // The OS / browser network status is the most direct drop signal: it fires
+    // for real network loss and for DevTools "Offline". On 'offline' we flag the
+    // drop and close so reconnection kicks in; on 'online' we reconnect
+    // immediately instead of waiting for the retry timer.
+    const handleOffline = () => {
+      setConnected(false)
+      socketRef.current?.close()
+    }
+    const handleOnline = () => {
+      if (socketRef.current?.readyState !== WebSocket.OPEN) {
+        clearTimeout(reconnectTimer)
+        connect()
+      }
+    }
+    window.addEventListener('offline', handleOffline)
+    window.addEventListener('online', handleOnline)
+
     return () => {
       closedByUser = true
       clearTimeout(reconnectTimer)
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('online', handleOnline)
       socketRef.current?.close()
       socketRef.current = null
     }
