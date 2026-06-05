@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { logStreamUrl, type LogEntry, type SearchFilters } from '../api'
 
@@ -31,6 +31,9 @@ export function useLogStream({ filters, onLog, onConfig, onReconnect }: UseLogSt
   filtersRef.current = filters
 
   const socketRef = useRef<WebSocket | null>(null)
+  const [connected, setConnected] = useState(false)
+  // Only flag a real drop once we've connected at least once (not the initial boot).
+  const [everConnected, setEverConnected] = useState(false)
 
   // Push updated filters to the server whenever they change.
   useEffect(() => {
@@ -50,6 +53,8 @@ export function useLogStream({ filters, onLog, onConfig, onReconnect }: UseLogSt
       socketRef.current = socket
 
       socket.onopen = () => {
+        setConnected(true)
+        setEverConnected(true)
         socket.send(JSON.stringify(toSubscription(filtersRef.current)))
         // A successful reopen means the stream dropped: logs may have been
         // missed while offline, so resync the list from the REST endpoint.
@@ -73,6 +78,7 @@ export function useLogStream({ filters, onLog, onConfig, onReconnect }: UseLogSt
       }
 
       socket.onclose = () => {
+        setConnected(false)
         if (closedByUser) {
           return
         }
@@ -89,4 +95,6 @@ export function useLogStream({ filters, onLog, onConfig, onReconnect }: UseLogSt
       socketRef.current = null
     }
   }, [])
+
+  return { connected, everConnected }
 }
